@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visão geral das entregas</title>
+<style>
+  * { box-sizing: border-box; }
+  :root {
+    --page: #f5f5f3;
+    --white: #fff;
+    --text: #252525;
+    --muted: #656565;
+    --line: #d6d6d6;
+    --blue: #4057b2;
+    --orange: #f36c32;
+  }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--page);
+    color: var(--text);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .page { width: 100%; padding: 0 18px 0 21px; }
+  .subtitle { color: #555; font-size: 16px; line-height: 22px; margin: 4px 0 19px; }
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    background: var(--white);
+    border: 1px solid var(--line);
+    min-height: 152px;
+  }
+  .metric {
+    position: relative;
+    padding: 28px 44px 22px;
+    border-right: 1px solid var(--line);
+    cursor: text;
+    outline: none;
+  }
+  .metric:last-child { border-right: 0; }
+  .metric.active::after {
+    content: ""; position: absolute; height: 3px; left: 0; right: 0; bottom: 0;
+    background: var(--orange);
+  }
+  .metric-label { color: #666; font-size: 16px; margin-bottom: 11px; }
+  .metric-value { font-size: 29px; line-height: 32px; font-weight: 700; margin-bottom: 12px; }
+  .metric-foot { color: #666; font-size: 16px; display: flex; gap: 14px; }
+  .chart-panel {
+    border: 1px solid var(--line);
+    border-top: 2px solid #d9d9d9;
+    background: var(--white);
+    min-height: 520px;
+    padding: 0;
+  }
+  .chart-toolbar {
+    height: 68px; display: flex; justify-content: flex-end; align-items: center;
+    gap: 20px; padding: 0 43px 0 20px; color: #666;
+  }
+  .tool-select {
+    appearance: none; -webkit-appearance: none; border: 0; background: transparent;
+    color: #666; font: inherit; font-size: 15px; padding: 8px 22px 8px 0;
+    cursor: pointer; outline-offset: 3px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23666' stroke-width='1.3'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right center;
+  }
+  .tool-select:disabled { opacity: .45; cursor: default; }
+  .chart-area { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 34%); gap: 20px; padding: 0 42px 24px 48px; }
+  .chart-wrap { min-width: 0; padding-top: 0; }
+  #chart { display: block; width: 100%; height: 420px; overflow: visible; }
+  .legend { padding-top: 10px; font-size: 15px; }
+  .legend-title { font-weight: 700; margin: 0 0 10px; }
+  .legend-row { display: grid; grid-template-columns: minmax(0, 1fr) 82px 82px; align-items: center; gap: 12px; color: #555; }
+  .sender { display: flex; align-items: center; min-width: 0; gap: 8px; }
+  .dot { width: 16px; height: 16px; border-radius: 50%; background: var(--blue); flex: 0 0 16px; }
+  .sender-name { border: 0; outline: none; min-width: 0; max-width: 100%; padding: 2px 0; color: #444; background: transparent; font: inherit; font-size: 15px; }
+  .legend-number, .legend-percent { text-align: right; white-space: nowrap; }
+  [contenteditable="true"]:focus, input:focus { outline: 1px solid #a9b4dc; outline-offset: 3px; }
+  .metric-label, .metric-value, .metric-foot span { outline-offset: 3px; }
+  .hint { display: none; }
+  @media (max-width: 900px) {
+    .page { padding: 0 12px; }
+    .metric { padding: 22px 20px; }
+    .chart-area { grid-template-columns: 1fr; padding: 0 20px 24px; }
+    .legend { padding: 0 4px 15px; }
+    #chart { height: 340px; }
+    .chart-panel { min-height: auto; }
+  }
+  @media (max-width: 560px) {
+    .subtitle { font-size: 14px; margin-bottom: 12px; }
+    .summary { grid-template-columns: 1fr; }
+    .metric { min-height: 118px; border-right: 0; border-bottom: 1px solid var(--line); padding: 18px 22px; }
+    .metric:last-child { border-bottom: 0; }
+    .metric-label { font-size: 14px; margin-bottom: 6px; }
+    .metric-value { font-size: 25px; margin-bottom: 7px; }
+    .metric-foot { font-size: 14px; }
+    .chart-toolbar { height: 55px; padding-right: 15px; gap: 10px; }
+    .tool-select { font-size: 13px; }
+    .chart-area { padding: 0 10px 20px; }
+    #chart { height: 300px; }
+    .legend-row { grid-template-columns: minmax(0, 1fr) 60px 50px; gap: 6px; font-size: 12px; }
+    .sender-name { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="subtitle">Visão geral detalhada das entregas das suas campanhas.</div>
+  <section class="summary" aria-label="Resumo das entregas">
+    <div class="metric" data-metric="total">
+      <div class="metric-label" contenteditable="true" spellcheck="false">Total enviado</div>
+      <div class="metric-value" id="totalValue" contenteditable="true" spellcheck="false">7,770</div>
+      <div class="metric-foot"><span contenteditable="true" spellcheck="false">N/A</span><span contenteditable="true" spellcheck="false">0</span></div>
+    </div>
+    <div class="metric active" data-metric="delivered">
+      <div class="metric-label" contenteditable="true" spellcheck="false">Entregue</div>
+      <div class="metric-value" id="deliveredValue" contenteditable="true" spellcheck="false">6,942</div>
+      <div class="metric-foot"><span contenteditable="true" spellcheck="false">N/A</span><span contenteditable="true" spellcheck="false">0</span></div>
+    </div>
+    <div class="metric" data-metric="failed">
+      <div class="metric-label" contenteditable="true" spellcheck="false">Falhou</div>
+      <div class="metric-value" id="failedValue" contenteditable="true" spellcheck="false">828</div>
+      <div class="metric-foot"><span contenteditable="true" spellcheck="false">N/A</span><span contenteditable="true" spellcheck="false">0</span></div>
+    </div>
+  </section>
+  <section class="chart-panel">
+    <div class="chart-toolbar">
+      <select class="tool-select" id="chartType" aria-label="Tipo de gráfico">
+        <option value="bar">Gráfico de barras</option>
+        <option value="line">Gráfico de linhas</option>
+      </select>
+      <select class="tool-select" id="timeMode" aria-label="Agrupamento por tempo">
+        <option value="Hora">Hora</option>
+        <option value="Dia">Dia</option>
+        <option value="Semana">Semana</option>
+      </select>
+    </div>
+    <div class="chart-area">
+      <div class="chart-wrap"><svg id="chart" viewBox="0 0 900 420" preserveAspectRatio="none" role="img" aria-label="Gráfico de entregas"></svg></div>
+      <div class="legend">
+        <div class="legend-title">Emissor</div>
+        <div class="legend-row">
+          <div class="sender"><span class="dot"></span><input class="sender-name" id="senderName" value="5511922049139" aria-label="Nome do emissor"></div>
+          <div class="legend-number" id="legendValue">6,942</div>
+          <div class="legend-percent" id="legendPercent">100%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const chart = $('chart');
+  let selectedMetric = 'delivered';
+  const colors = { delivered: '#4057b2', total: '#4057b2', failed: '#4057b2' };
+  const metricIds = { total: 'totalValue', delivered: 'deliveredValue', failed: 'failedValue' };
+  const parseNum = text => {
+    const cleaned = String(text).replace(/[^\d.,-]/g, '').replace(/,/g, '');
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  };
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  function activeValue() { return parseNum($(metricIds[selectedMetric]).textContent); }
+  function drawChart() {
+    const value = activeValue();
+    const max = Math.max(7000, Math.ceil(value / 1000) * 1000);
+    const W = 900, H = 420, left = 55, right = 12, top = 7, bottom = 38;
+    const plotW = W - left - right, plotH = H - top - bottom;
+    const ticks = 5;
+    let s = '';
+    for (let i = 0; i <= ticks; i++) {
+      const v = max - (max / ticks) * i;
+      const y = top + plotH * i / ticks;
+      s += `<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="${i===ticks?'#999':'#e4e4e4'}" stroke-width="${i===ticks?1.5:1}"/>`;
+      const label = i === ticks ? '0' : fmt(v);
+      s += `<text x="${left-15}" y="${y+5}" fill="#666" font-size="12" text-anchor="end">${label}</text>`;
+    }
+    const barW = Math.min(32, plotW * .045);
+    const x = left + plotW * .5 - barW / 2;
+    const barH = Math.max(0, Math.min(plotH, value / max * plotH));
+    const y = top + plotH - barH;
+    if ($('chartType').value === 'bar') {
+      s += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="${colors[selectedMetric]}"/>`;
+    } else {
+      s += `<polyline points="${left},${top+plotH} ${left+plotW*.5},${y} ${W-right},${top+plotH}" fill="none" stroke="${colors[selectedMetric]}" stroke-width="3"/>`;
+      s += `<circle cx="${left+plotW*.5}" cy="${y}" r="4" fill="${colors[selectedMetric]}"/>`;
+    }
+    s += `<text x="${left+plotW*.5}" y="${Math.max(15,y-6)}" fill="#222" font-size="12" font-weight="700" text-anchor="middle">${fmt(value)}</text>`;
+    s += `<text x="${left+plotW*.5}" y="${H-10}" fill="#666" font-size="12" text-anchor="middle">${escapeXml($('senderName').value)}</text>`;
+    chart.innerHTML = s;
+    $('legendValue').textContent = fmt(value);
+    const total = parseNum($(metricIds.total).textContent);
+    $('legendPercent').textContent = (total > 0 ? Math.round(value / total * 100) : 0) + '%';
+  }
+  function escapeXml(str) { return String(str).replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c])); }
+  document.querySelectorAll('.metric').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.metric').forEach(m => m.classList.remove('active'));
+      el.classList.add('active');
+      selectedMetric = el.dataset.metric;
+      drawChart();
+    });
+  });
+  Object.values(metricIds).forEach(id => $(id).addEventListener('input', drawChart));
+  $('senderName').addEventListener('input', drawChart);
+  $('chartType').addEventListener('change', drawChart);
+  $('timeMode').addEventListener('change', () => {});
+  drawChart();
+})();
+</script>
+</body>
+</html>
